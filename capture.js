@@ -1,12 +1,12 @@
 const fs = require('fs');
 const child_process = require('child_process');
 
-if (process.argv.length < 1) {
+if (process.argv.length < 3) {
   console.log(`usage: node ./capture.js [har file]`);
   return;
 }
 
-const file = process.argv[0];
+const file = process.argv[2];
 const data = JSON.parse(fs.readFileSync(file));
 const entries = data.log.entries;
 const next = () => {

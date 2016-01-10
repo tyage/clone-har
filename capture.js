@@ -1,12 +1,15 @@
+'use strict';
+
 const fs = require('fs');
 const child_process = require('child_process');
+const path = require('path');
 
 if (process.argv.length < 3) {
   console.log(`usage: node ./capture.js [har file]`);
   return;
 }
 
-const sitesDir = `${process.cwd()}/sites`;
+const sitesDir = `${__dirname}/sites`;
 const getDomains = () => fs.readdirSync(sitesDir).filter(domain => domain !== '.gitkeep');
 
 // print nginx, etc/hosts config
@@ -44,7 +47,20 @@ const next = () => {
     return;
   }
   const entry = entries.pop();
-  const child = child_process.spawn('wget', ['-x', entry.request.url], { cwd: sitesDir });
-  child.on('close', next);
+
+  if (entry.response && entry.response.content) {
+    const content = entry.response.content;
+    const text = new Buffer(content.text, content.encoding === 'base64' ? 'base64' : '');
+    let paths = entry.request.url.match(/^https?:\/\/(.+)$/)[1];
+    if (paths[paths.length - 1] === '/') { paths += 'index.html'; }
+    const child = child_process.spawn('mkdir', ['-p', path.dirname(paths)], { cwd: sitesDir });
+    child.on('close', () => {
+      fs.writeFileSync(path.join(sitesDir, paths), text);
+      next();
+    });
+  } else {
+    const child = child_process.spawn('wget', ['-x', entry.request.url], { cwd: sitesDir });
+    child.on('close', next);
+  }
 };
 next();

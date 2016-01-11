@@ -14,17 +14,6 @@ const getDomains = () => fs.readdirSync(sitesDir).filter(domain => domain !== '.
 
 // print nginx, etc/hosts config
 const hostsConfig = domain => `127.0.0.1\t${domain}`;
-const nginxConfig = domain => `server {
-  listen 80;
-  server_name ${domain};
-
-  root ${sitesDir}/${domain};
-  index index.html;
-
-  location / {
-    try_files $uri $uri/ =404;
-  }
-}`;
 const printConfig = () => {
   const domains = getDomains();
   console.log(`/etc/hosts:
@@ -33,7 +22,15 @@ ${domains.map(hostsConfig).join('\n')}
 
 nginx settings:
 
-${domains.map(nginxConfig).join('\n')}
+server {
+  listen 80;
+  root ${sitesDir}/$host;
+  index index.html;
+
+  location / {
+    try_files $uri $uri?$args $uri/ =404;
+  }
+}
 `);
 };
 
@@ -48,7 +45,7 @@ const next = () => {
   }
   const entry = entries.pop();
 
-  if (entry.response && entry.response.content) {
+  if (entry.response && entry.response.content && entry.response.content.text) {
     const content = entry.response.content;
     const text = new Buffer(content.text, content.encoding === 'base64' ? 'base64' : '');
     let paths = entry.request.url.match(/^https?:\/\/(.+)$/)[1];

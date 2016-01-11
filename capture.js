@@ -45,9 +45,9 @@ const next = () => {
   }
   const entry = entries.pop();
 
-  if (entry.response && entry.response.content && entry.response.content.text) {
+  if (entry.response && entry.response.content) {
     const content = entry.response.content;
-    const text = new Buffer(content.text, content.encoding === 'base64' ? 'base64' : '');
+    const text = new Buffer(content.text || '', content.encoding === 'base64' ? 'base64' : '');
     let paths = entry.request.url.match(/^https?:\/\/(.+)$/)[1];
     if (paths[paths.length - 1] === '/') { paths += 'index.html'; }
     const child = child_process.spawn('mkdir', ['-p', path.dirname(paths)], { cwd: sitesDir });

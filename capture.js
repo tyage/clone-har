@@ -52,7 +52,11 @@ const next = () => {
     if (paths[paths.length - 1] === '/') { paths += 'index.html'; }
     const child = child_process.spawn('mkdir', ['-p', path.dirname(paths)], { cwd: sitesDir });
     child.on('close', () => {
-      fs.writeFileSync(path.join(sitesDir, paths), text);
+      try {
+        fs.writeFileSync(path.join(sitesDir, paths), text);
+      } catch (e) {
+        console.log(e);
+      }
       next();
     });
   } else {
